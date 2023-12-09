@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SRT Merger</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous"></head>
+
+    <style>
+        table.submerge {
+            width: 80%;
+            margin: auto;
+        }
+
+        table.submerge th {
+            background-color: aliceblue;
+        }
+
+        .subtitle {
+            max-width: 800px;
+            margin-bottom: 10px;
+        }
+
+        .table .file-column {
+            max-width: 47%;
+            width: 47%;
+            word-wrap: break-word;
+        }
+    </style>
+<body>
+    <form id="uploadForm" enctype="multipart/form-data">
+        <table class="table table-bordered table-striped submerge" id="comparisonTable">
+            <thead class="thead-dark">
+                <tr>
+                    <th class="file-column">
+                        File 1
+                        <input type="file" name="file1" onchange="checkFilesSelected()" class="mt-2">
+                    </th>
+                    <th colspan="2">Select</th>
+                    <th class="file-column">
+                        File 2
+                        <input type="file" name="file2" onchange="checkFilesSelected()" class="mt-2">
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Rows will be added here dynamically -->
+            </tbody>
+        </table>    
+    </form>
+    
+    <button id="saveButton" class="btn btn-primary position-fixed bottom-0 end-0 m-3" onclick="saveMergedFile()">
+        Save Merged SRT
+    </button>
+    
+    <!-- Bootstrap 5 JS and Popper.js (for tooltips, popovers, etc.) -->
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.10.2/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+
+<script>
+        async function compareFiles() {
+            const formData = new FormData(document.getElementById('uploadForm'));
+            const response = await fetch('/upload', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await response.json();
+
+            populateTable(data.sections);
+        }
+
+        function checkFilesSelected() {
+            const file1 = document.querySelector('input[name="file1"]').files[0];
+            const file2 = document.querySelector('input[name="file2"]').files[0];
+
+            if (file1 && file2) {
+                compareFiles();
+            }
+        }
+
+function formatTimestamp(milliseconds) {
+    const hours = Math.floor(milliseconds / 3600000);
+    const minutes = Math.floor((milliseconds % 3600000) / 60000);
+    const seconds = Math.floor((milliseconds % 60000) / 1000);
+    const ms = milliseconds % 1000;
+
+    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')},${ms.toString().padStart(3, '0')}`;
+}
+
+function replaceNewlinesWithBreaks(text) {
+    return text.replace(/\n/g, '<br/>');
+}
+
+function generateSubtitleHTML(subtitles) {
+    if (!subtitles || subtitles.length === 0) return '';
+
+    return subtitles.map(sub => `
+        <div class='subtitle'>
+            <b>${sub.index}. ${formatTimestamp(sub.start)} --> ${formatTimestamp(sub.end)}</b><br/>
+            ${replaceNewlinesWithBreaks(sub.text)}
+        </div>
+    `).join('');
+}
+
+function isIdentical(file1, file2) {
+    // If one is null and the other isn't, they're not identical
+    if (!file1 || !file2) return false;
+
+    // If their lengths are different, they're not identical
+    if (file1.length !== file2.length) return false;
+
+    // Compare each subtitle in the arrays
+    for (let i = 0; i < file1.length; i++) {
+        if (file1[i].start !== file2[i].start ||
+            file1[i].end !== file2[i].end ||
+            file1[i].text !== file2[i].text) {
+            return false;
+        }
+    }
+
+    // If all checks passed, they're identical
+    return true;
+}
+
+function isIdenticalText(file1, file2) {
+    // If one is null and the other isn't, they're not identical
+    if (!file1 || !file2) return false;
+    if (file1.length !== file2.length) return false;
+
+    for (let i = 0; i < file1.length; i++) {
+        if (file1[i].text !== file2[i].text) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+function createBootstrapCheckbox(name, value, isChecked = false, isHidden = false) {
+    const checkboxWrapper = document.createElement('div');
+    checkboxWrapper.classList.add('form-check');
+
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.name = name;
+    checkbox.value = value;
+    checkbox.checked = isChecked;
+    checkbox.classList.add('form-check-input');
+    if (isHidden) checkbox.style.display = 'none';
+
+    checkboxWrapper.appendChild(checkbox);
+
+    return checkboxWrapper;
+}
+
+function populateTable(results) {
+    const tableBody = document.getElementById('comparisonTable').querySelector('tbody');
+    tableBody.innerHTML = ''; // Clear existing rows
+
+    results.forEach((result, index) => {
+        const row = tableBody.insertRow();
+
+        // File 1 column
+        const cell1 = row.insertCell();
+        cell1.innerHTML = generateSubtitleHTML(result.file1);
+        cell1.classList.add('file-column');
+
+        // Checkbox for File 1
+        const cellCheckbox1 = row.insertCell();
+        const checkbox1 = createBootstrapCheckbox('file1', result.index, !!result.file1, !result.file1);
+        cellCheckbox1.appendChild(checkbox1);
+
+        // Checkbox for File 2
+        const cellCheckbox2 = row.insertCell();
+        const checkbox2 = createBootstrapCheckbox('file2', result.index, false, !result.file2);
+        cellCheckbox2.appendChild(checkbox2);
+
+        // File 2 column
+        const cell2 = row.insertCell();
+        cell2.innerHTML = generateSubtitleHTML(result.file2);
+        cell2.classList.add('file-column');
+
+        if (isIdentical(result.file1, result.file2)) {
+            checkbox2.style.display = 'none';
+            cell2.style.color = 'lightgrey';    // cell2.style.opacity = '0.5';
+        } else if (isIdenticalText(result.file1, result.file2)) {
+            cell2.style.color = 'grey';    // cell2.style.opacity = '0.75';
+        }
+    });
+}
+
+
+async function saveMergedFile() {
+    const selectedFile1Indices = [...document.querySelectorAll('input[name="file1"]:checked')].map(checkbox => parseInt(checkbox.value, 10));
+    const selectedFile2Indices = [...document.querySelectorAll('input[name="file2"]:checked')].map(checkbox => parseInt(checkbox.value, 10));
+
+    const response = await fetch('/merge', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            file1Indices: selectedFile1Indices,
+            file2Indices: selectedFile2Indices
+        })
+    });
+
+    const data = await response.blob();
+    const url = URL.createObjectURL(data);
+    const a = document.createElement('a');
+    a.style.display = 'none';
+    a.href = url;
+    a.download = 'merged.srt';
+    document.body.appendChild(a);
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+    </script>
+    
+</body>
+</html>
+
