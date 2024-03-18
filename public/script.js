@@ -19,7 +19,7 @@ function populateTable(results) {
 
         // File 1 column
         const cell1 = row.insertCell();
-        cell1.textContent = result.file1 ? result.file1.text : '';
+        cell1.textContent = result.file1 ? result.file1.content : '';
 
         // Checkbox for File 1
         const cellCheckbox1 = row.insertCell();
@@ -44,7 +44,7 @@ function populateTable(results) {
 
         // File 2 column
         const cell2 = row.insertCell();
-        cell2.textContent = result.file2 ? result.file2.text : '';
+        cell2.textContent = result.file2 ? result.file2.content : '';
     });
 }
 

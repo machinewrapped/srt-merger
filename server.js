@@ -15,7 +15,7 @@ const upload = multer({ storage: storage });
 let fileSections
 
 function isIdentical(line1, line2) {
-    return (line1.start == line2.start) && (line1.end == line2.end) && (line1.text == line2.text);
+    return (line1.start == line2.start) && (line1.end == line2.end) && (line1.content == line2.content);
 }
 
 function compareSubtitles(srt1, srt2) {
