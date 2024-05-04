@@ -27,6 +27,24 @@
             width: 47%;
             word-wrap: break-word;
         }
+
+        .form-check-input {
+            min-height: 2rem;
+            min-width: 2rem;
+            border: 1px solid #ccc;
+            background-color: #f8f9fa;
+            transition: all 0.3s ease; /* Smooth transition for hover effects */
+        }
+
+        .form-check-input:hover, .form-check-input:focus {
+            border-color: #007bff;
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+        }
+
+        .form-check {
+            align-items: center; /* Center vertically */
+            height: 100%; /* Ensure it takes full height of the cell */
+        }
     </style>
 <body>
     <form id="uploadForm" enctype="multipart/form-data">
@@ -49,10 +67,12 @@
             </tbody>
         </table>    
     </form>
-    
-    <button id="saveButton" class="btn btn-primary position-fixed bottom-0 end-0 m-3" onclick="saveMergedFile()">
-        Save Merged SRT
-    </button>
+
+    <div class="position-fixed bottom-0 end-0 m-3">
+        <button id="saveButton" class="btn btn-primary" onclick="saveMergedFile()">
+            Save Merged SRT
+        </button>    
+    </div>
     
     <!-- Bootstrap 5 JS and Popper.js (for tooltips, popovers, etc.) -->
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.10.2/dist/umd/popper.min.js"></script>
@@ -149,10 +169,27 @@ function createBootstrapCheckbox(name, value, isChecked = false, isHidden = fals
     checkbox.classList.add('form-check-input');
     if (isHidden) checkbox.style.display = 'none';
 
+    checkbox.addEventListener('click', handleCheckboxClick);
+
     checkboxWrapper.appendChild(checkbox);
 
     return checkboxWrapper;
 }
+
+function handleCheckboxClick(event) {
+    const currentCheckbox = event.target;
+    if (!event.shiftKey) {
+        // Retrieve all checkboxes once to improve performance
+        const siblingCheckboxes = document.querySelectorAll("input[type='checkbox']");
+        // Loop through checkboxes and deselect matching conditions
+        siblingCheckboxes.forEach(checkbox => {
+            if (checkbox !== currentCheckbox && checkbox.value === currentCheckbox.value) {
+                checkbox.checked = false;
+            }
+        });
+    }
+}
+
 
 function populateTable(results) {
     const tableBody = document.getElementById('comparisonTable').querySelector('tbody');
