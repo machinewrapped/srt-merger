@@ -87,6 +87,10 @@ function compareSubtitles(srt1, srt2) {
 }
 
 app.post('/upload', upload.fields([{ name: 'file1' }, { name: 'file2' }]), (req, res) => {
+    // Log the filenames to the console
+    console.log("Left: " + req.files.file1[0].originalname);
+    console.log("Right; " + req.files.file2[0].originalname);
+
     // Parse the uploaded SRT files
     srt1 = subsrt.parse(req.files.file1[0].buffer.toString());
     srt2 = subsrt.parse(req.files.file2[0].buffer.toString());
