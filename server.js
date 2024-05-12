@@ -140,9 +140,6 @@ app.post('/merge', (req, res) => {
 app.post('/update-subtitle', (req, res) => {
     const { file, index, text } = req.body;
 
-    console.log("Updating subtitle", file, index);
-    console.log(text)
-
     if (!fileSections) {
         return res.status(500).send('Error: File is not loaded.');
     }
