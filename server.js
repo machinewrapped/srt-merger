@@ -137,6 +137,40 @@ app.post('/merge', (req, res) => {
     res.send(mergedSrtContent);
 });
 
+app.post('/update-subtitle', (req, res) => {
+    const { file, index, text } = req.body;
+
+    console.log("Updating subtitle", file, index);
+    console.log(text)
+
+    if (!fileSections) {
+        return res.status(500).send('Error: File is not loaded.');
+    }
+
+    try {
+        // Normalise newlines to CRLF
+        const content  = text.replace(/\r\n/g, '\n').replace(/\n/g, '\r\n');
+        subtitles = subsrt.parse(content);
+    } catch (error) {
+        return res.status(500).send('Error: Invalid subtitle format.');
+    }
+
+    if (!subtitles) {
+        return res.status(500).send('Error: Invalid subtitle format.');
+    }
+
+    console.log("Updated subtitles", subtitles)
+
+    // Find the corresponding section
+    const section = fileSections.find(section => section.index === index);
+    if (section && section[file]) {
+        section[file] = subtitles;
+        res.json({ message: 'Subtitle updated successfully', file: file, index: index, subtitles: subtitles});
+    } else {
+        res.status(404).json({ message: 'Subtitle not found', file: file, index: index });
+    }
+
+});
 
 
 app.listen(port, () => {
