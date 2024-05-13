@@ -128,7 +128,7 @@ function generateSubtitleHTML(subtitles) {
     return subtitles.map(sub => `
         <div class='subtitle'>
             <b>${sub.index}. ${formatTimestamp(sub.start)} --> ${formatTimestamp(sub.end)}</b><br/>
-            ${replaceNewlinesWithBreaks(sub.text)}
+            ${replaceNewlinesWithBreaks(sub.content)}
         </div>
     `).join('');
 }
@@ -172,7 +172,7 @@ function extractSubtitlesFromText(text) {
 function generateSubtitleText(subtitles) {
     if (!subtitles || subtitles.length === 0) return '';
 
-    lines = subtitles.map(sub => `${sub.index}\n${sub.start} --> ${sub.end}\n${sub.text.trim()}`)
+    lines = subtitles.map(sub => `${sub.index}\n${sub.start} --> ${sub.end}\n${sub.content.trim()}`)
     
     return lines.join('\n\n');
 }
@@ -180,7 +180,7 @@ function generateSubtitleText(subtitles) {
 function generateSubtitleContent(subtitles) {
     if (!subtitles || subtitles.length === 0) return '';
 
-    lines = subtitles.map(sub => `${sub.index}\n${sub.start} --> ${sub.end}\n${sub.text.trim()}`)
+    lines = subtitles.map(sub => `${sub.index}\n${sub.start} --> ${sub.end}\n${sub.content.trim()}`)
     
     return lines.join('\n\n');
 }
@@ -196,7 +196,7 @@ function isIdentical(file1, file2) {
     for (let i = 0; i < file1.length; i++) {
         if (file1[i].start !== file2[i].start ||
             file1[i].end !== file2[i].end ||
-            file1[i].text !== file2[i].text) {
+            file1[i].content !== file2[i].content) {
             return false;
         }
     }
@@ -211,7 +211,7 @@ function isIdenticalText(file1, file2) {
     if (file1.length !== file2.length) return false;
 
     for (let i = 0; i < file1.length; i++) {
-        if (file1[i].text !== file2[i].text) {
+        if (file1[i].content !== file2[i].content) {
             return false;
         }
     }
