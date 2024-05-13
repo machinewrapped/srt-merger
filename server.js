@@ -86,6 +86,36 @@ function compareSubtitles(srt1, srt2) {
     return sections;
 }
 
+function toTimeString(ms) {
+    var hh = Math.floor(ms / 1000 / 3600);
+    var mm = Math.floor(ms / 1000 / 60 % 60);
+    var ss = Math.floor(ms / 1000 % 60);
+    var ff = Math.floor(ms % 1000);
+    var time = (hh < 10 ? "0" : "") + hh + ":" + (mm < 10 ? "0" : "") + mm + ":" + (ss < 10 ? "0" : "") + ss + "," + (ff < 100 ? "0" : "") + (ff < 10 ? "0" : "") + ff;
+    return time;
+  }
+
+function buildContent(captions) {
+    // Convert the merged subtitles to SRT format
+    // Using our own implementation as subsrt uses text instead of content, so it loses tags
+    let srt = '';
+    var eol = "\r\n";
+    for (var i = 0; i < captions.length; i++) {
+      var caption = captions[i];
+      if (typeof caption.type === "undefined" || caption.type == "caption") {
+        srt += (i + 1).toString() + eol;
+        srt += toTimeString(caption.start) + " --> " + toTimeString(caption.end) + eol;
+        srt += caption.content + eol;
+        srt += eol;
+      }
+      else {
+        console.log("SKIP:", caption);
+      }
+    }
+
+    return srt;
+}
+
 app.post('/upload', upload.fields([{ name: 'file1' }, { name: 'file2' }]), (req, res) => {
     // Log the filenames to the console
     console.log("Left: " + req.files.file1[0].originalname);
@@ -130,7 +160,7 @@ app.post('/merge', (req, res) => {
     selectedSubtitles.sort((a, b) => a.start - b.start);
 
     // Convert to SRT format
-    const mergedSrtContent = subsrt.build(selectedSubtitles);
+    const mergedSrtContent = buildContent(selectedSubtitles);
 
     res.setHeader('Content-Type', 'text/plain');
     res.setHeader('Content-Disposition', 'attachment; filename=merged.srt');
@@ -138,16 +168,18 @@ app.post('/merge', (req, res) => {
 });
 
 app.post('/update-subtitle', (req, res) => {
-    const { file, index, text } = req.body;
+    const { file, index, content } = req.body;
 
     if (!fileSections) {
         return res.status(500).send('Error: File is not loaded.');
     }
 
+    // console.log("Updating subtitles", text)
+
     try {
         // Normalise newlines to CRLF
-        const content  = text.replace(/\r\n/g, '\n').replace(/\n/g, '\r\n');
-        subtitles = subsrt.parse(content);
+        const text  = content.replace(/\r\n/g, '\n').replace(/\n/g, '\r\n');
+        subtitles = subsrt.parse(text);
     } catch (error) {
         return res.status(500).send('Error: Invalid subtitle format.');
     }

@@ -148,7 +148,7 @@ function extractSubtitlesFromHtml(html) {
             index: parseInt(index.trim(), 10),
             start: start,
             end: end,
-            text: textLines.join('')
+            content: textLines.join('')
         };
     });
 }
@@ -164,7 +164,7 @@ function extractSubtitlesFromText(text) {
             index: parseInt(index.trim(), 10),
             start: start,
             end: end,
-            text: textLines.join('\n')
+            content: textLines.join('\n')
         };
     });
 }
@@ -346,13 +346,13 @@ function updateCellContent(file, index, subtitles) {
     cell.innerHTML = generateSubtitleHTML(subtitles);
 }
 
-function updateSubtitlesOnServer(file, index, text) {
+function updateSubtitlesOnServer(file, index, content) {
     fetch('/update-subtitle', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ file, index, text }),
+        body: JSON.stringify({ file, index, content }),
     })
     .then(response => response.json())
     .then(data => {
