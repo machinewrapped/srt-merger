@@ -25,6 +25,10 @@ function compareSubtitles(srt1, srt2) {
     let index = 0;
     let sectionEndTime;
 
+    // Normalize line endings
+    srt1.forEach(line => line.content = line.content.replace(/\r\n/g, '\n').replace(/\n/g, '\r\n'));
+    srt2.forEach(line => line.content = line.content.replace(/\r\n/g, '\n').replace(/\n/g, '\r\n'));
+
     while (i < srt1.length || j < srt2.length) {
         const sectionFile1 = [];
         const sectionFile2 = [];
@@ -48,13 +52,15 @@ function compareSubtitles(srt1, srt2) {
         }
 
         // Add lines that are only in srt1
-        while (i < srt1.length && srt1[i].end <= srt2[j].start) {
+        const next_srt2_start = srt2[j].start;
+        while (i < srt1.length && srt1[i].end <= next_srt2_start) {
             sectionFile1.push(srt1[i++]);
         }
 
         if (!sectionFile1.length) {
+            const next_srt1_start = srt1[i].start;
             // Add lines that are only in srt2
-            while (j < srt2.length && srt2[j].end <= srt1[i].start) {
+            while (j < srt2.length && srt2[j].end <= next_srt1_start) {
                 sectionFile2.push(srt2[j++]);
             }    
         }
