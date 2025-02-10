@@ -11,6 +11,8 @@ Alternatively, open the directory in Visual Studio Code and configure it as a st
 ## usage
 Select the "best" subtitles as File 1, as these will be selected by default. Select the alternative translation as File 2, then go through selecting or deselecting lines from each file as appropriate. Shift + Click to include both sides.
 
+Lines can be manually edited (text and timecodes) by double-clicking them.
+
 When ready to save, click "Save Merged SRT".
 
 ![image](https://github.com/machinewrapped/srt-merger/assets/10140676/fd2e5fac-48de-40da-9683-9a5a587d9d9e)
