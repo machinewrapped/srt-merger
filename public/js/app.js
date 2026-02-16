@@ -1,80 +1,5 @@
 
 let fileSections = null;
-let file1Data = null; // { name, content }
-let file2Data = null; // { name, content }
-
-// IndexedDB Setup
-const dbName = "SrtMergerDB";
-const storeName = "session";
-
-function openDB() {
-    return new Promise((resolve, reject) => {
-        const request = indexedDB.open(dbName, 1);
-        request.onerror = (event) => reject("IndexedDB error: " + event.target.error);
-        request.onsuccess = (event) => {
-            const db = event.target.result;
-            // Listen for version changes (e.g. invalidations from other tabs or deleteDatabase)
-            db.onversionchange = () => {
-                db.close();
-                console.log("Database version changed. Connection closed.");
-            };
-            resolve(db);
-        };
-        request.onupgradeneeded = (event) => {
-            const db = event.target.result;
-            if (!db.objectStoreNames.contains(storeName)) {
-                db.createObjectStore(storeName, { keyPath: "id" });
-            }
-        };
-    });
-}
-
-async function saveSession() {
-    if (!fileSections) return;
-    try {
-        const db = await openDB();
-        const tx = db.transaction(storeName, "readwrite");
-        const store = tx.objectStore(storeName);
-        store.put({ id: "current", file1: file1Data, file2: file2Data, sections: fileSections });
-        
-        tx.oncomplete = () => db.close();
-        tx.onerror = () => db.close();
-    } catch(e) {
-        console.error("Failed to save session", e);
-    }
-}
-
-async function loadSession() {
-    try {
-        const db = await openDB();
-        return new Promise((resolve) => {
-            const tx = db.transaction(storeName, "readonly");
-            const store = tx.objectStore(storeName);
-            const request = store.get("current");
-            
-            request.onsuccess = (event) => {
-                const data = event.target.result;
-                if (data) {
-                    file1Data = data.file1;
-                    file2Data = data.file2;
-                    fileSections = data.sections;
-                    resolve(true);
-                } else {
-                    resolve(false);
-                }
-            };
-            request.onerror = () => resolve(false);
-            
-            // Ensure we close the connection when done
-            tx.oncomplete = () => db.close();
-            tx.onerror = () => db.close();
-        });
-    } catch(e) {
-        console.error("Failed to load session", e);
-        return false;
-    }
-}
-
 
 function isIdenticalSubtitle(sub1, sub2) {
     if (!sub1 || !sub2) return false;
@@ -184,22 +109,19 @@ function buildContent(captions) {
 
 window.processFiles = async function(file1, file2) {
     if (!file1 || !file2) return;
-    
+
     const read = (f) => new Promise(resolve => {
         const reader = new FileReader();
-        reader.onload = (e) => resolve({ name: f.name, content: e.target.result });
+        reader.onload = (e) => resolve(e.target.result);
         reader.readAsText(f);
     });
 
-    const [f1, f2] = await Promise.all([read(file1), read(file2)]);
-    file1Data = f1;
-    file2Data = f2;
+    const [content1, content2] = await Promise.all([read(file1), read(file2)]);
 
-    const srt1 = SrtParser.parse(f1.content);
-    const srt2 = SrtParser.parse(f2.content);
+    const srt1 = SrtParser.parse(content1);
+    const srt2 = SrtParser.parse(content2);
 
     fileSections = compareSubtitles(srt1, srt2);
-    saveSession();
     return fileSections;
 }
 
@@ -215,7 +137,6 @@ window.updateClientSubtitle = function(fileSide, index, newContent) {
     if (fileSide === 'file1') section.file1 = parsed;
     else section.file2 = parsed;
 
-    saveSession();
     return parsed;
 }
 
@@ -240,16 +161,6 @@ window.generateClientMergedFile = function(file1Indices, file2Indices) {
     
     return buildContent(selectedSubtitles);
 }
-
-// Auto-load on startup
-window.addEventListener('load', async () => {
-    if (await loadSession()) {
-        console.log("Loaded session from IndexedDB");
-        if (typeof populateTable === 'function' && fileSections) {
-             populateTable(fileSections);
-        }
-    }
-});
 
 // UI Helper Functions and Event Handlers
 
@@ -549,21 +460,8 @@ async function saveMergedFile() {
     }, 100);
 }
 
-async function resetSession() {
+function resetSession() {
     if (confirm("Are you sure you want to reset? This will clear all loaded files and changes.")) {
-        const deleteRequest = window.indexedDB.deleteDatabase(dbName);
-
-        deleteRequest.onsuccess = () => {
-            console.log("Database deleted successfully.");
-            location.reload();
-        };
-        deleteRequest.onerror = () => {
-            console.error("Error deleting database.");
-            alert("Could not reset session. Please try again.");
-        };
-        deleteRequest.onblocked = () => {
-            console.warn("Database delete blocked.");
-            alert("Reset is blocked. Please close any other tabs with this application open and try again.");
-        };
+        location.reload();
     }
 }
