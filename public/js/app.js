@@ -283,8 +283,30 @@ function formatTimestamp(milliseconds) {
     return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')},${ms.toString().padStart(3, '0')}`;
 }
 
-function replaceNewlinesWithBreaks(text) {
-    return text.replace(/\n/g, '<br/>');
+function sanitizeSubtitleHtml(text) {
+    // Allow only SRT formatting tags: <i>, <b>, <u>, <font>
+    const allowedTags = ['i', 'b', 'u', 'font'];
+    const tagPattern = allowedTags.map(t => `${t}(?:\\s[^>]*)?`).join('|');
+    const allowedRegex = new RegExp(`<\\/?(${tagPattern})>`, 'gi');
+
+    // Extract allowed tags, escape everything else, then restore allowed tags
+    const placeholders = [];
+    const withPlaceholders = text.replace(allowedRegex, (match) => {
+        placeholders.push(match);
+        return `\x00${placeholders.length - 1}\x00`;
+    });
+
+    // Escape HTML in the remaining text
+    const escaped = withPlaceholders
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+
+    // Restore allowed tags and convert newlines to <br/>
+    return escaped
+        .replace(/\x00(\d+)\x00/g, (_, i) => placeholders[parseInt(i, 10)])
+        .replace(/\n/g, '<br/>');
 }
 
 function generateSubtitleHTML(subtitles) {
@@ -293,7 +315,7 @@ function generateSubtitleHTML(subtitles) {
     return subtitles.map(sub => `
         <div class='subtitle'>
             <b>${sub.index}. ${formatTimestamp(sub.start)} --> ${formatTimestamp(sub.end)}</b><br/>
-            ${replaceNewlinesWithBreaks(sub.content)}
+            ${sanitizeSubtitleHtml(sub.content)}
         </div>
     `).join('');
 }
