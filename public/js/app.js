@@ -359,16 +359,8 @@ function extractSubtitlesFromText(text) {
 function generateSubtitleText(subtitles) {
     if (!subtitles || subtitles.length === 0) return '';
 
-    const lines = subtitles.map(sub => `${sub.index}\n${sub.start} --> ${sub.end}\n${sub.content.trim()}`)
-    
-    return lines.join('\n\n');
-}
+    const lines = subtitles.map(sub => `${sub.index}\n${formatTimestamp(sub.start)} --> ${formatTimestamp(sub.end)}\n${sub.content.trim()}`);
 
-function generateSubtitleContent(subtitles) {
-    if (!subtitles || subtitles.length === 0) return '';
-
-    const lines = subtitles.map(sub => `${sub.index}\n${sub.start} --> ${sub.end}\n${sub.content.trim()}`)
-    
     return lines.join('\n\n');
 }
 
