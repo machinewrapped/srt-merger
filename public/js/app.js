@@ -460,8 +460,3 @@ async function saveMergedFile() {
     }, 100);
 }
 
-function resetSession() {
-    if (confirm("Are you sure you want to reset? This will clear all loaded files and changes.")) {
-        location.reload();
-    }
-}
