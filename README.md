@@ -7,17 +7,15 @@ This is a simple utility to help merge two different subtitle translations for a
 **Note:** This tool assumes the subtitles are already synchronized.
 
 ## Features
-- **Client-Side Only**: Does not require a server or internet connection. All processing happens in your browser.
-- **Privacy**: Your subtitle files are processed locally and never uploaded to any server.
 - **Visual Comparison**: Side-by-side view of two subtitle files aligned by timecode.
-- **Intelligent Conflict Detection**: Automatically highlights rows with overlapping times or conflicting text.
-- **Editing**: Double-click any line to edit text or timecodes directly.
 - **Flexible Merging**: Select lines from either file, or Shift+Click to include both versions.
-- **Persistence**: Your work is saved automatically in your browser (IndexedDB) so you don't lose progress if you accidentally close the tab.
-- **Reset Session**: Easily clear all data and start fresh.
+- **Editing**: Double-click any line to edit text or timecodes directly.
+- **Client-Side Only**: Does not require a server or internet connection. All processing happens in your browser.
+
+<img width="3408" height="1880" alt="SRT Merger Serverless" src="https://github.com/user-attachments/assets/ffd69348-1272-49bd-81d1-0c56383261bf" />
 
 ## Setup
-No installation required! Just download or clone this repository.
+No installation required! Just download or clone this repository or [run it in your browser](https://machinewrapped.github.io/srt-merger/).
 
 ### Prerequisites
 - A modern web browser (Chrome, Edge, Firefox, etc.).
@@ -34,7 +32,7 @@ No installation required! Just download or clone this repository.
 
 3.  **Merge**:
     - Go through the rows. Identical lines are greyed out automatically.
-    - For conflicting lines, check the box for the version you want to keep.
+    - For conflicting lines, check the box for the version you want to keep (or neither, or both).
     - **Shift + Click** a checkbox to select it without deselecting the other side (useful for keeping both versions).
 
 4.  **Edit**:
@@ -43,6 +41,3 @@ No installation required! Just download or clone this repository.
 
 5.  **Save**:
     - Click **"Save Merged SRT"** to download your new subtitle file.
-
-## Screenshots
-![image](https://github.com/machinewrapped/srt-merger/assets/10140676/fd2e5fac-48de-40da-9683-9a5a587d9d9e)
