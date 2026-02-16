@@ -172,10 +172,10 @@ function buildContent(captions) {
     const eol = "\r\n";
     for (let i = 0; i < captions.length; i++) {
         const caption = captions[i];
-         srt += (i + 1).toString() + eol;
-         srt += SrtParser.toTimeString(caption.start) + " --> " + SrtParser.toTimeString(caption.end) + eol;
-         srt += caption.content + eol;
-         srt += eol;
+        srt += (i + 1).toString() + eol;
+        srt += SrtParser.toTimeString(caption.start) + " --> " + SrtParser.toTimeString(caption.end) + eol;
+        srt += caption.content + eol;
+        srt += eol;
     }
     return srt;
 }
@@ -424,7 +424,7 @@ function makeEditable(cell, index, fileSide) {
         cell.dataset.file = fileSide;
         cell.dataset.index = index;
 
-        const text = generateSubtitleText(subtitles)
+        const text = generateSubtitleText(subtitles);
         const original = cell.innerHTML;
 
         const input = document.createElement('textarea');
@@ -455,7 +455,7 @@ function populateTable(results) {
         const cell1 = row.insertCell();
         cell1.innerHTML = generateSubtitleHTML(result.file1);
         cell1.classList.add('file-column', 'file1');
-        makeEditable(cell1, index, 'file1')
+        makeEditable(cell1, index, 'file1');
 
         // Checkbox for File 1
         const cellCheckbox1 = row.insertCell();
@@ -471,7 +471,7 @@ function populateTable(results) {
         const cell2 = row.insertCell();
         cell2.innerHTML = generateSubtitleHTML(result.file2);
         cell2.classList.add('file-column');
-        makeEditable(cell2, index, 'file2')
+        makeEditable(cell2, index, 'file2');
 
         if (isIdenticalRow(result.file1, result.file2)) {
             checkbox2.style.display = 'none';
@@ -486,7 +486,7 @@ function updateCellContent(file, index, subtitles) {
     if (!subtitles) return;
 
     const rows = document.querySelectorAll('tr');
-    const row = Array.from(rows).find(row => row.dataset.index == index);
+    const row = Array.from(rows).find(row => row.dataset.index === String(index));
     console.assert(row, 'Row not found:', index);
 
     const cells = row.querySelectorAll('td');
@@ -551,7 +551,6 @@ async function saveMergedFile() {
 
 async function resetSession() {
     if (confirm("Are you sure you want to reset? This will clear all loaded files and changes.")) {
-        const dbName = "SrtMergerDB";
         const deleteRequest = window.indexedDB.deleteDatabase(dbName);
 
         deleteRequest.onsuccess = () => {
