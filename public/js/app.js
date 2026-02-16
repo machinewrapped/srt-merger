@@ -153,9 +153,9 @@ function compareSubtitles(srt1, srt2) {
 
 function buildContent(captions) {
     let srt = '';
-    var eol = "\r\n";
-    for (var i = 0; i < captions.length; i++) {
-        var caption = captions[i];
+    const eol = "\r\n";
+    for (let i = 0; i < captions.length; i++) {
+        const caption = captions[i];
          srt += (i + 1).toString() + eol;
          srt += SrtParser.toTimeString(caption.start) + " --> " + SrtParser.toTimeString(caption.end) + eol;
          srt += caption.content + eol;
@@ -289,7 +289,7 @@ function extractSubtitlesFromHtml(html) {
 
     return Array.from(subtitles).map((subtitle, n) => {
         const [header, ...textLines] = subtitle.innerHTML.split('<br>');
-        header_text = header.replace(/<b>|<\/b>/g, '').trim();
+        const header_text = header.replace(/<b>|<\/b>/g, '').trim();
         const [index, timestamps] = header_text.split('. ');
         const [start, end] = timestamps.match(/\d{2}:\d{2}:\d{2},\d{3}/g);
 
@@ -321,7 +321,7 @@ function extractSubtitlesFromText(text) {
 function generateSubtitleText(subtitles) {
     if (!subtitles || subtitles.length === 0) return '';
 
-    lines = subtitles.map(sub => `${sub.index}\n${sub.start} --> ${sub.end}\n${sub.content.trim()}`)
+    const lines = subtitles.map(sub => `${sub.index}\n${sub.start} --> ${sub.end}\n${sub.content.trim()}`)
     
     return lines.join('\n\n');
 }
@@ -329,7 +329,7 @@ function generateSubtitleText(subtitles) {
 function generateSubtitleContent(subtitles) {
     if (!subtitles || subtitles.length === 0) return '';
 
-    lines = subtitles.map(sub => `${sub.index}\n${sub.start} --> ${sub.end}\n${sub.content.trim()}`)
+    const lines = subtitles.map(sub => `${sub.index}\n${sub.start} --> ${sub.end}\n${sub.content.trim()}`)
     
     return lines.join('\n\n');
 }
@@ -370,7 +370,6 @@ function handleCheckboxClick(event) {
 
 function autoResizeTextArea(textArea) {
     textArea.style.height = 'auto';
-    console.log('Scroll height:', textArea.scrollHeight);
     textArea.style.height = textArea.scrollHeight + 'px';
 }
 
@@ -390,8 +389,8 @@ function makeEditable(cell, index, fileSide) {
         cell.dataset.file = fileSide;
         cell.dataset.index = index;
 
-        text = generateSubtitleText(subtitles)
-        original = cell.innerHTML;
+        const text = generateSubtitleText(subtitles)
+        const original = cell.innerHTML;
 
         const input = document.createElement('textarea');
         input.value = text;
@@ -517,8 +516,20 @@ async function saveMergedFile() {
 
 async function resetSession() {
     if (confirm("Are you sure you want to reset? This will clear all loaded files and changes.")) {
-        const dbs = await window.indexedDB.databases();
-        dbs.forEach(db => window.indexedDB.deleteDatabase(db.name));
-        location.reload();
+        const dbName = "SrtMergerDB";
+        const deleteRequest = window.indexedDB.deleteDatabase(dbName);
+
+        deleteRequest.onsuccess = () => {
+            console.log("Database deleted successfully.");
+            location.reload();
+        };
+        deleteRequest.onerror = () => {
+            console.error("Error deleting database.");
+            alert("Could not reset session. Please try again.");
+        };
+        deleteRequest.onblocked = () => {
+            console.warn("Database delete blocked.");
+            alert("Reset is blocked. Please close any other tabs with this application open and try again.");
+        };
     }
 }
