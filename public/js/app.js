@@ -251,7 +251,7 @@ function extractSubtitlesFromHtml(html) {
             index: parseInt(index.trim(), 10),
             start: timeMatches[0],
             end: timeMatches[1],
-            content: textLines.join('')
+            content: textLines.join('\n')
         };
     }).filter(Boolean);
 }
