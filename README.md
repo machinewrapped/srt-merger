@@ -22,8 +22,8 @@ No installation required! Just download or clone this repository.
 
 ## Usage
 1.  **Launch the App**:
-    - Double-click **`srt-merger.bat`** (Windows).
-    - Or open `public/index.html` directly in your browser.
+    - **Online**: Visit the [GitHub Pages Deployment](https://machinewrapped.github.io/srt-merger/).
+    - **Local**: Double-click **`srt-merger.bat`** (Windows) or open `public/index.html` directly in your browser.
 
 2.  **Compare Subtitles**:
     - Select your primary subtitle file as **File 1**.
