@@ -325,19 +325,24 @@ function extractSubtitlesFromHtml(html) {
     const doc = parser.parseFromString(html, 'text/html');
     const subtitles = doc.querySelectorAll('.subtitle');
 
-    return Array.from(subtitles).map((subtitle, n) => {
+    return Array.from(subtitles).map((subtitle) => {
         const [header, ...textLines] = subtitle.innerHTML.split('<br>');
-        const header_text = header.replace(/<b>|<\/b>/g, '').trim();
-        const [index, timestamps] = header_text.split('. ');
-        const [start, end] = timestamps.match(/\d{2}:\d{2}:\d{2},\d{3}/g);
+        const headerText = header.replace(/<b>|<\/b>/g, '').trim();
+        const dotIndex = headerText.indexOf('. ');
+        if (dotIndex === -1) return null;
+
+        const index = headerText.substring(0, dotIndex);
+        const timestamps = headerText.substring(dotIndex + 2);
+        const timeMatches = timestamps.match(/\d{2}:\d{2}:\d{2},\d{3}/g);
+        if (!timeMatches || timeMatches.length < 2) return null;
 
         return {
             index: parseInt(index.trim(), 10),
-            start: start,
-            end: end,
+            start: timeMatches[0],
+            end: timeMatches[1],
             content: textLines.join('')
         };
-    });
+    }).filter(Boolean);
 }
 
 function extractSubtitlesFromText(text) {
