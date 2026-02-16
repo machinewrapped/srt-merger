@@ -1,5 +1,43 @@
 
 let fileSections = null;
+let lastFileHandle = null;
+let loadedFile1 = null;
+let loadedFile2 = null;
+
+// Persist last-used file handle in IndexedDB so the picker remembers the directory across reloads
+const handleStore = {
+    _db: null,
+    _open() {
+        if (this._db) return Promise.resolve(this._db);
+        return new Promise((resolve, reject) => {
+            const req = indexedDB.open('srt-merger', 1);
+            req.onupgradeneeded = () => req.result.createObjectStore('handles');
+            req.onsuccess = () => { this._db = req.result; resolve(this._db); };
+            req.onerror = () => reject(req.error);
+        });
+    },
+    async save(handle) {
+        try {
+            const db = await this._open();
+            const tx = db.transaction('handles', 'readwrite');
+            tx.objectStore('handles').put(handle, 'lastDir');
+        } catch (e) { /* ignore storage errors */ }
+    },
+    async load() {
+        try {
+            const db = await this._open();
+            return new Promise((resolve) => {
+                const tx = db.transaction('handles', 'readonly');
+                const req = tx.objectStore('handles').get('lastDir');
+                req.onsuccess = () => resolve(req.result || null);
+                req.onerror = () => resolve(null);
+            });
+        } catch (e) { return null; }
+    },
+};
+
+// Restore persisted handle on load
+handleStore.load().then(h => { if (h) lastFileHandle = h; });
 
 function isIdenticalSubtitle(sub1, sub2) {
     if (!sub1 || !sub2) return false;
@@ -164,22 +202,55 @@ window.generateClientMergedFile = function(file1Indices, file2Indices) {
 
 // UI Helper Functions and Event Handlers
 
-async function compareFiles() {
-    const file1 = document.querySelector('input[name="file1"]').files[0];
-    const file2 = document.querySelector('input[name="file2"]').files[0];
-
-    if (file1 && file2) {
-        const sections = await window.processFiles(file1, file2);
-        populateTable(sections);
+async function openFile(inputName) {
+    if (window.showOpenFilePicker) {
+        try {
+            const openOptions = {
+                types: [{
+                    description: 'SubRip Subtitle File',
+                    accept: { 'text/plain': ['.srt'] },
+                }],
+                multiple: false,
+                id: 'srt-merger-save',
+            };
+            if (lastFileHandle) openOptions.startIn = lastFileHandle;
+            const [handle] = await window.showOpenFilePicker(openOptions);
+            lastFileHandle = handle;
+            handleStore.save(handle);
+            const file = await handle.getFile();
+            if (inputName === 'file1') {
+                loadedFile1 = file;
+            } else {
+                loadedFile2 = file;
+            }
+            document.getElementById(`${inputName}-name`).textContent = file.name;
+            checkFilesReady();
+            return;
+        } catch (err) {
+            if (err.name === 'AbortError') return;
+            console.error('showOpenFilePicker failed, falling back:', err);
+        }
     }
+    // Fallback: click the hidden <input type="file">
+    document.querySelector(`input[name="${inputName}"]`).click();
 }
 
-function checkFilesSelected() {
-    const file1 = document.querySelector('input[name="file1"]').files[0];
-    const file2 = document.querySelector('input[name="file2"]').files[0];
+function onFallbackFileChange(inputName) {
+    const file = document.querySelector(`input[name="${inputName}"]`).files[0];
+    if (!file) return;
+    if (inputName === 'file1') {
+        loadedFile1 = file;
+    } else {
+        loadedFile2 = file;
+    }
+    document.getElementById(`${inputName}-name`).textContent = file.name;
+    checkFilesReady();
+}
 
-    if (file1 && file2) {
-        compareFiles();
+async function checkFilesReady() {
+    if (loadedFile1 && loadedFile2) {
+        const sections = await window.processFiles(loadedFile1, loadedFile2);
+        populateTable(sections);
     }
 }
 
@@ -420,21 +491,24 @@ function updateSubtitlesLocally(file, index, content) {
 }
 
 async function saveMergedFile() {
-    const selectedFile1Indices = [...document.querySelectorAll('input[name="file1"]:checked')].map(checkbox => parseInt(checkbox.value, 10));
-    const selectedFile2Indices = [...document.querySelectorAll('input[name="file2"]:checked')].map(checkbox => parseInt(checkbox.value, 10));
+    const selectedFile1Indices = [...document.querySelectorAll('input[type="checkbox"][name="file1"]:checked')].map(checkbox => parseInt(checkbox.value, 10));
+    const selectedFile2Indices = [...document.querySelectorAll('input[type="checkbox"][name="file2"]:checked')].map(checkbox => parseInt(checkbox.value, 10));
 
     const mergedContent = window.generateClientMergedFile(selectedFile1Indices, selectedFile2Indices);
     
     // Try the File System Access API first (supported in Edge, Chrome, Opera)
     if (window.showSaveFilePicker) {
         try {
-            const handle = await window.showSaveFilePicker({
+            const options = {
                 suggestedName: 'merged.srt',
                 types: [{
                     description: 'SubRip Subtitle File',
                     accept: { 'text/plain': ['.srt'] },
                 }],
-            });
+                id: 'srt-merger-save',
+            };
+            if (lastFileHandle) options.startIn = lastFileHandle;
+            const handle = await window.showSaveFilePicker(options);
             const writable = await handle.createWritable();
             await writable.write(mergedContent);
             await writable.close();

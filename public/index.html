@@ -63,12 +63,20 @@
                 <tr>
                     <th class="file-column">
                         File 1
-                        <input type="file" name="file1" onchange="checkFilesSelected()" class="mt-2">
+                        <div class="mt-2">
+                            <button class="btn btn-sm btn-outline-secondary" onclick="openFile('file1')">Choose File</button>
+                            <span id="file1-name" class="ms-2 text-muted small"></span>
+                            <input type="file" name="file1" accept=".srt" onchange="onFallbackFileChange('file1')" style="display:none">
+                        </div>
                     </th>
                     <th colspan="2">Select</th>
                     <th class="file-column">
                         File 2
-                        <input type="file" name="file2" onchange="checkFilesSelected()" class="mt-2">
+                        <div class="mt-2">
+                            <button class="btn btn-sm btn-outline-secondary" onclick="openFile('file2')">Choose File</button>
+                            <span id="file2-name" class="ms-2 text-muted small"></span>
+                            <input type="file" name="file2" accept=".srt" onchange="onFallbackFileChange('file2')" style="display:none">
+                        </div>
                     </th>
                 </tr>
             </thead>
