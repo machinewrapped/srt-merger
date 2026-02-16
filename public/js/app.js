@@ -130,13 +130,13 @@ window.updateClientSubtitle = function(fileSide, index, newContent) {
     const section = fileSections.find(s => s.index === index);
     if (!section) return;
 
-    // The UI passes the raw text from the textarea. 
+    // The UI passes the raw text from the textarea.
     // We need to parse it back into the object structure.
     const parsed = SrtParser.parse(newContent);
-    
-    if (fileSide === 'file1') section.file1 = parsed;
-    else section.file2 = parsed;
 
+    if (!parsed || parsed.length === 0) return section[fileSide];
+
+    section[fileSide] = parsed;
     return parsed;
 }
 
