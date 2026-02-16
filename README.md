@@ -1,6 +1,6 @@
 # srt-merger
 
-This is a simple utility to help merge two different subtitle translations for a film. It aligns the subtitles using timecodes and allows individual lines to be selected from each file (or neither/both), then generates a new `.srt` file with the selected lines. Double-click on a subtitle to edit the text.
+This is a simple utility to help merge two different subtitle translations for a film. It aligns the subtitles using timecodes and allows individual lines to be selected from each file (or neither/both), then generates a new `.srt` file with the selected lines.
 
 [Run it in your browser](https://machinewrapped.github.io/srt-merger/)
 
