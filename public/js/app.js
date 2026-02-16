@@ -231,6 +231,12 @@ function generateSubtitleHTML(subtitles) {
     `).join('');
 }
 
+function decodeHtmlEntities(text) {
+    const el = document.createElement('textarea');
+    el.innerHTML = text;
+    return el.value;
+}
+
 function extractSubtitlesFromHtml(html) {
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, 'text/html');
@@ -251,7 +257,7 @@ function extractSubtitlesFromHtml(html) {
             index: parseInt(index.trim(), 10),
             start: timeMatches[0],
             end: timeMatches[1],
-            content: textLines.join('\n')
+            content: decodeHtmlEntities(textLines.join('\n'))
         };
     }).filter(Boolean);
 }
