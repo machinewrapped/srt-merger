@@ -11,7 +11,7 @@ const SrtParser = {
         const hh = parseInt(match[1]);
         const mm = parseInt(match[2]);
         const ss = parseInt(match[3]);
-        const ff = match[5] ? parseInt(match[5]) : 0;
+        const ff = match[5] ? parseInt(match[5].padEnd(3, '0')) : 0;
         
         return (hh * 3600000) + (mm * 60000) + (ss * 1000) + ff;
     },
