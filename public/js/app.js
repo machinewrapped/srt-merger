@@ -11,7 +11,15 @@ function openDB() {
     return new Promise((resolve, reject) => {
         const request = indexedDB.open(dbName, 1);
         request.onerror = (event) => reject("IndexedDB error: " + event.target.error);
-        request.onsuccess = (event) => resolve(event.target.result);
+        request.onsuccess = (event) => {
+            const db = event.target.result;
+            // Listen for version changes (e.g. invalidations from other tabs or deleteDatabase)
+            db.onversionchange = () => {
+                db.close();
+                console.log("Database version changed. Connection closed.");
+            };
+            resolve(db);
+        };
         request.onupgradeneeded = (event) => {
             const db = event.target.result;
             if (!db.objectStoreNames.contains(storeName)) {
@@ -27,7 +35,10 @@ async function saveSession() {
         const db = await openDB();
         const tx = db.transaction(storeName, "readwrite");
         const store = tx.objectStore(storeName);
-        await store.put({ id: "current", file1: file1Data, file2: file2Data, sections: fileSections });
+        store.put({ id: "current", file1: file1Data, file2: file2Data, sections: fileSections });
+        
+        tx.oncomplete = () => db.close();
+        tx.onerror = () => db.close();
     } catch(e) {
         console.error("Failed to save session", e);
     }
@@ -40,6 +51,7 @@ async function loadSession() {
             const tx = db.transaction(storeName, "readonly");
             const store = tx.objectStore(storeName);
             const request = store.get("current");
+            
             request.onsuccess = (event) => {
                 const data = event.target.result;
                 if (data) {
@@ -52,6 +64,10 @@ async function loadSession() {
                 }
             };
             request.onerror = () => resolve(false);
+            
+            // Ensure we close the connection when done
+            tx.oncomplete = () => db.close();
+            tx.onerror = () => db.close();
         });
     } catch(e) {
         console.error("Failed to load session", e);
